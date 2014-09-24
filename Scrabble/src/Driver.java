@@ -54,8 +54,11 @@ public class Driver {
 				System.out.println(validWordsFound.get(i).toString());
 			}
 			
+			//associate words with point values for initial word placement
+			String bestWord = findHighestValueWord(matchedWords, numOfWildcards, rackLetters);
+			
 			//Print out highest value word
-			System.out.println("Place word: ");
+			System.out.println("Place word: " + bestWord);
 			System.out.println("Total words found: " + matchedWords.size());
 			
 			//Time elapsed during turn
@@ -64,6 +67,35 @@ public class Driver {
 		}
 		else
 			System.out.println("No Valid Words Found");
+	}
+
+	private static String findHighestValueWord(ArrayList<String> validWords,
+			int numOfWildcards, String rackLetters) {
+		String highestPointWord = null;
+		int highestPoints = 0;
+				
+		//array to hold point total for each corresponding alphabet letter with first position as a wild card
+		int[] points = {0, 1, 3, 3, 2, 1, 4, 2, 4, 1, 8, 5, 1, 3, 1, 1, 3, 10, 1, 1, 1, 1, 4, 4, 8, 4, 10};
+		String alphabet = "_ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+		
+		if (numOfWildcards > 0){
+			
+		}
+		else{
+			for (String s : validWords){
+				int tempPointHolder = 0;
+				if(s.length()==7)
+					tempPointHolder += 50;
+				for (char c : s.toCharArray()){
+					tempPointHolder += points[alphabet.indexOf(c)];
+				}
+				if (tempPointHolder > highestPoints){
+					highestPoints = tempPointHolder;
+					highestPointWord = s;
+				}
+			}
+		}
+		return highestPointWord.concat(" worth " + highestPoints + " points.");
 	}
 
 	private static ArrayList<String> searchDictionary(String prefix, String letters, int wildcards) {

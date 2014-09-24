@@ -11,7 +11,7 @@ public class Rack {
 
 	private String pickLetterTiles() {
 		
-		return "ZYGOT__";
+		return "ZYGOTQP";
 	}
 	
 	public String sortRack(String rackLetters){
