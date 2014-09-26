@@ -49,21 +49,20 @@ public class Driver {
 		
 		if (validWordsFound != null){
 			
-			//Compare scores of valid words
-			for (int i = 0; i < validWordsFound.size(); i++){
-				System.out.println(validWordsFound.get(i).toString());
-			}
+			//Prints valid words found
+			//for (int i = 0; i < validWordsFound.size(); i++){
+			//	System.out.println(validWordsFound.get(i).toString());
+			//}
 			
 			//associate words with point values for initial word placement
 			String bestWord = findHighestValueWord(matchedWords, numOfWildcards, rackLetters);
 			
 			//Print out highest value word
 			System.out.println("Place word: " + bestWord);
-			System.out.println("Total words found: " + matchedWords.size());
 			
 			//Time elapsed during turn
 			totalTime = System.currentTimeMillis() - startTime;
-			System.out.println("Elapsed Time: " + totalTime);
+			System.out.println("This turn took: " + totalTime + " ms");
 		}
 		else
 			System.out.println("No Valid Words Found");
@@ -78,23 +77,78 @@ public class Driver {
 		int[] points = {0, 1, 3, 3, 2, 1, 4, 2, 4, 1, 8, 5, 1, 3, 1, 1, 3, 10, 1, 1, 1, 1, 4, 4, 8, 4, 10};
 		String alphabet = "_ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 		
-		if (numOfWildcards > 0){
-			
-		}
-		else{
 			for (String s : validWords){
-				int tempPointHolder = 0;
-				if(s.length()==7)
-					tempPointHolder += 50;
-				for (char c : s.toCharArray()){
-					tempPointHolder += points[alphabet.indexOf(c)];
+				int tempPointHolder = 0;		
+				int bestLetter = 0;
+				int wildcards = numOfWildcards;
+				int indexOfWildcard;
+				int secondIndexOfWildcard;
+				String tempRackLetters = rackLetters;
+								
+				//Add up the points for the word
+				for (char c : s.toCharArray()){	
+					
+					if (!rackLetters.contains(Character.toString(c)) && wildcards == 2){
+						secondIndexOfWildcard = s.indexOf(c);
+						wildcards -= 1;
+					}
+					else if (!rackLetters.contains(Character.toString(c)) && wildcards == 1){
+						indexOfWildcard = s.indexOf(c);
+						wildcards -= 1;
+					}
+					else if (tempRackLetters.contains(Character.toString(c)) && wildcards > 0){
+						tempRackLetters.replace(Character.toString(c), "");
+						tempPointHolder += points[alphabet.indexOf(c)];						
+					}
+					else
+						tempPointHolder += points[alphabet.indexOf(c)];
 				}
+								
+				//Determines the highest point letter that can be placed on the double letter square
+				if (s.length() == 5){					
+					if (points[alphabet.indexOf(s.charAt(0))] > points[alphabet.indexOf(s.charAt(s.length() - 1))])
+						bestLetter = 0;
+					else
+						bestLetter = s.length() - 1;
+					
+					tempPointHolder = tempPointHolder + points[alphabet.indexOf(s.charAt(bestLetter))]; //double letter tile
+					tempPointHolder = tempPointHolder * 2; //initial turn uses a double word space
+				}
+				else if (s.length() == 6){
+					int temp = 0;
+					for (int i = 0; i < 6; i++){
+						if (temp < points[alphabet.indexOf(s.charAt(i))] && i != 2 && i != 3){
+							bestLetter = i;
+							temp = points[alphabet.indexOf(s.charAt(i))];
+						}							
+					}
+					
+					tempPointHolder = tempPointHolder + points[alphabet.indexOf(s.charAt(bestLetter))]; //double letter tile
+					tempPointHolder = tempPointHolder * 2; //initial turn uses a double word space
+				}
+				else if (s.length() == 7){
+					int temp = 0;
+					for (int i = 0; i < 7; i++){
+						if (temp < points[alphabet.indexOf(s.charAt(i))] && i != 3){
+							bestLetter = i;
+							temp = points[alphabet.indexOf(s.charAt(i))];
+						}
+					}
+					
+					tempPointHolder = tempPointHolder + points[alphabet.indexOf(s.charAt(bestLetter))]; //double letter tile
+					tempPointHolder = tempPointHolder * 2; //initial turn uses a double word space
+					tempPointHolder += 50; // 50 Bonus points for using all seven tiles
+				}
+				else
+					tempPointHolder = tempPointHolder * 2; //initial turn uses a double word space
+				
+				//stores highest point word
 				if (tempPointHolder > highestPoints){
 					highestPoints = tempPointHolder;
 					highestPointWord = s;
 				}
 			}
-		}
+		
 		return highestPointWord.concat(" worth " + highestPoints + " points.");
 	}
 
