@@ -20,7 +20,7 @@ public class Driver {
 		Rack rack = new Rack(null);
 		System.out.println("Rack: " + rack);
 		
-		/*
+		/* Prints hashmap keys plus values
 		for (Entry<String, ArrayList<String>> entry : wordList.entrySet()) {
 	        String key = entry.getKey().toString();;
 	        ArrayList<String> value = entry.getValue();
@@ -32,15 +32,12 @@ public class Driver {
 		int numOfWildcards = 0;
 		String rackLetters = rack.toString();
 		for (char c : rackLetters.toCharArray()){
-			if (c == '_'){
-				numOfWildcards++;
-			}
+			if (c == '_')
+				numOfWildcards++;			
 		}
-		if(numOfWildcards > 0){
+		if(numOfWildcards > 0)
 			rackLetters = rackLetters.replaceAll("_", "");
-			
-			System.out.println("Rack with wildcards removed: " + rackLetters);
-		}
+					
 		System.out.println("Number of Wildcards: " + numOfWildcards);		
 				
 		//Put valid words into a list
@@ -53,6 +50,7 @@ public class Driver {
 			//for (int i = 0; i < validWordsFound.size(); i++){
 			//	System.out.println(validWordsFound.get(i).toString());
 			//}
+			System.out.println("Valid Words Found: " + validWordsFound.size());
 			
 			//associate words with point values for initial word placement
 			String bestWord = findHighestValueWord(matchedWords, numOfWildcards, rackLetters);
@@ -72,6 +70,7 @@ public class Driver {
 			int numOfWildcards, String rackLetters) {
 		String highestPointWord = null;
 		int highestPoints = 0;
+		int highestPointLetterIndex = 0;
 				
 		//array to hold point total for each corresponding alphabet letter with first position as a wild card
 		int[] points = {0, 1, 3, 3, 2, 1, 4, 2, 4, 1, 8, 5, 1, 3, 1, 1, 3, 10, 1, 1, 1, 1, 4, 4, 8, 4, 10};
@@ -79,26 +78,26 @@ public class Driver {
 		
 			for (String s : validWords){
 				int tempPointHolder = 0;		
-				int bestLetter = 0;
+				int bestLetter = 0;				
 				int wildcards = numOfWildcards;
-				int indexOfWildcard;
-				int secondIndexOfWildcard;
+				int indexOfWildcard = -1;
+				int secondIndexOfWildcard = -1;
 				String tempRackLetters = rackLetters;
 								
 				//Add up the points for the word
 				for (char c : s.toCharArray()){	
 					
-					if (!rackLetters.contains(Character.toString(c)) && wildcards == 2){
+					if (!tempRackLetters.contains(Character.toString(c)) && wildcards == 2){
 						secondIndexOfWildcard = s.indexOf(c);
 						wildcards -= 1;
 					}
-					else if (!rackLetters.contains(Character.toString(c)) && wildcards == 1){
+					else if (!tempRackLetters.contains(Character.toString(c)) && wildcards == 1){
 						indexOfWildcard = s.indexOf(c);
 						wildcards -= 1;
 					}
 					else if (tempRackLetters.contains(Character.toString(c)) && wildcards > 0){
-						tempRackLetters.replace(Character.toString(c), "");
-						tempPointHolder += points[alphabet.indexOf(c)];						
+						tempRackLetters = tempRackLetters.replace(Character.toString(c), "");
+						tempPointHolder += points[alphabet.indexOf(c)];	
 					}
 					else
 						tempPointHolder += points[alphabet.indexOf(c)];
@@ -106,18 +105,21 @@ public class Driver {
 								
 				//Determines the highest point letter that can be placed on the double letter square
 				if (s.length() == 5){					
-					if (points[alphabet.indexOf(s.charAt(0))] > points[alphabet.indexOf(s.charAt(s.length() - 1))])
+					if (points[alphabet.indexOf(s.charAt(0))] > points[alphabet.indexOf(s.charAt(s.length() - 1))]
+							&& secondIndexOfWildcard != 0 && indexOfWildcard != 0)
 						bestLetter = 0;
 					else
 						bestLetter = s.length() - 1;
 					
-					tempPointHolder = tempPointHolder + points[alphabet.indexOf(s.charAt(bestLetter))]; //double letter tile
+					if (bestLetter != indexOfWildcard && bestLetter != secondIndexOfWildcard)
+						tempPointHolder = tempPointHolder + points[alphabet.indexOf(s.charAt(bestLetter))]; //double letter tile
 					tempPointHolder = tempPointHolder * 2; //initial turn uses a double word space
 				}
 				else if (s.length() == 6){
 					int temp = 0;
 					for (int i = 0; i < 6; i++){
-						if (temp < points[alphabet.indexOf(s.charAt(i))] && i != 2 && i != 3){
+						if (temp < points[alphabet.indexOf(s.charAt(i))] && i != 2 && i != 3
+								&& i != secondIndexOfWildcard && i != indexOfWildcard){
 							bestLetter = i;
 							temp = points[alphabet.indexOf(s.charAt(i))];
 						}							
@@ -129,7 +131,8 @@ public class Driver {
 				else if (s.length() == 7){
 					int temp = 0;
 					for (int i = 0; i < 7; i++){
-						if (temp < points[alphabet.indexOf(s.charAt(i))] && i != 3){
+						if (temp < points[alphabet.indexOf(s.charAt(i))] && i != 3
+								&& i != secondIndexOfWildcard && i != indexOfWildcard){
 							bestLetter = i;
 							temp = points[alphabet.indexOf(s.charAt(i))];
 						}
@@ -144,14 +147,23 @@ public class Driver {
 				
 				//stores highest point word
 				if (tempPointHolder > highestPoints){
+					highestPointLetterIndex = bestLetter;
 					highestPoints = tempPointHolder;
 					highestPointWord = s;
+					//System.out.println(s + " worth: " + highestPoints);
 				}
 			}
 		
 		return highestPointWord.concat(" worth " + highestPoints + " points.");
 	}
-
+	
+	/**
+	 * Builds a list of valid words from the letters on the rack
+	 * @param prefix
+	 * @param letters
+	 * @param wildcards
+	 * @return
+	 */
 	private static ArrayList<String> searchDictionary(String prefix, String letters, int wildcards) {
 		int n = letters.length();
 		
@@ -176,23 +188,23 @@ public class Driver {
 			for (int i = 0; i < n; i++){
 				if(wildcards > 0){
 					for (char alphabet = 'A'; alphabet <= 'Z'; alphabet++){
-						if (n < 7)
+						if (n < 7){
 							letters = letters + alphabet;
-						n= letters.length();
-						
-						//sorts the rack with the wildcard added in
-						char[] sortedLetters = letters.toCharArray();
-						Arrays.sort(sortedLetters);
-						StringBuilder sb = new StringBuilder(sortedLetters.length);
-						for (char c : sortedLetters){
-							sb.append(c);
+							//sorts the rack with the wildcard added in
+							char[] sortedLetters = letters.toCharArray();
+							Arrays.sort(sortedLetters);
+							StringBuilder sb = new StringBuilder(sortedLetters.length);
+							for (char c : sortedLetters){
+								sb.append(c);
+							}
+							letters = sb.toString();							
 						}
-						letters = sb.toString();
-						//System.out.println("Rack with wildcard: " + letters);
-												
+						
+						n= letters.length();
 						wildcards -= 1;
 						searchDictionary(prefix, letters, wildcards);
 						letters = letters.replaceFirst(Character.toString(alphabet), "");
+						n = letters.length();
 						wildcards += 1;
 					}					
 				}
