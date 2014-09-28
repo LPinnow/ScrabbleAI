@@ -65,7 +65,15 @@ public class Driver {
 		else
 			System.out.println("No Valid Words Found");
 	}
-
+	
+	/**
+	 * Compares words in a list to determine which word would give the highest
+	 * point value on the initial turn of a scrabble game
+	 * @param validWords
+	 * @param numOfWildcards
+	 * @param rackLetters
+	 * @return
+	 */
 	private static String findHighestValueWord(ArrayList<String> validWords,
 			int numOfWildcards, String rackLetters) {
 		String highestPointWord = null;
@@ -84,7 +92,7 @@ public class Driver {
 				int secondIndexOfWildcard = -1;
 				String tempRackLetters = rackLetters;
 								
-				//Add up the points for the word
+				//Add up the points for the word. Wildcard letters are worth zero points
 				for (char c : s.toCharArray()){	
 					
 					if (!tempRackLetters.contains(Character.toString(c)) && wildcards == 2){
