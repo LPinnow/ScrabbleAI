@@ -8,11 +8,14 @@ public class Rack {
 	
 	/**
 	 * Constructor
-	 * Initializes the rack of 7 letters
+	 * Initializes the rack of letters
 	 * @param rackLetters
 	 */
 	public Rack (String rackLetters){
-		letters = pickLetterTiles();
+		if(rackLetters == null || rackLetters == "")
+			letters = pickLetterTiles();	
+		else
+			letters = rackLetters;
 		letters = sortRack(letters);
 	}
 	

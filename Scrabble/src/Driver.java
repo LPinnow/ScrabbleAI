@@ -1,69 +1,130 @@
+/*
+ * Driver.java
+ * Author: Leah Pinnow
+ * Purpose: Outputs the highest point word for the first turn of a game of Scrabble.
+ * 			Creates a list of words from a rack of Scrabble tiles.
+ * 			Then determines which word is worth the most points.
+ * 			Then outputs where on the Scrabble board the word should be played, assuming the
+ * 			upper left hand corner square has a grid location of (0,0) with the middle
+ * 			located at (7,7).
+*/
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 
 public class Driver {
 	static Map<String, ArrayList<String>> wordList = new LinkedHashMap<String,ArrayList<String>>();
 	static ArrayList<String> matchedWords = new ArrayList<String>();
+	static int minLength = 2;
+	
 	public static void main(String[] args)  {
-		long startTime, totalTime;
-		ArrayList<String> validWordsFound;
+		long startTime, totalTime, timeOfAllTrials = 0;
+		boolean multipleTests = false;
+		int fileIndex = 0;
+		ArrayList<String> rackFileTiles = new ArrayList<String>();
+		BufferedReader in = null;
 		
 		//initialize dictionary of valid words
 		Dictionary dict = new Dictionary();
 		wordList = dict.words;
 		
-		//initialize rack of letters
-		Rack rack = new Rack(null);
-		System.out.println("Rack: " + rack);
-		
-		/* Prints hashmap keys plus values
-		for (Entry<String, ArrayList<String>> entry : wordList.entrySet()) {
-	        String key = entry.getKey().toString();;
-	        ArrayList<String> value = entry.getValue();
-	        System.out.println("key: " + key + "\t\t value: " + value );
-	    }
-	    */
-		
-		//checks for wildcards
-		int numOfWildcards = 0;
-		String rackLetters = rack.toString();
-		for (char c : rackLetters.toCharArray()){
-			if (c == '_')
-				numOfWildcards++;			
-		}
-		if(numOfWildcards > 0)
-			rackLetters = rackLetters.replaceAll("_", "");
+		//Ask user if they want to do multiple trials
+		System.out.print("Use a file to do test trials? Enter yes or no: ");
+		BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
+		String s;
+		try {
+			s = input.readLine();
+			if (s.equalsIgnoreCase("yes")){
+				multipleTests = true;
+				try{
+					in = new BufferedReader(new FileReader("rack.txt"));
+					String wordValue = in.readLine();
 					
-		System.out.println("Number of Wildcards: " + numOfWildcards);		
+					while(wordValue != null){						
+						rackFileTiles.add(wordValue);
+						wordValue = in.readLine();
+					}
+				}
+				catch(FileNotFoundException e){
+					e.printStackTrace();
+				}
+				catch(IOException e){
+					e.printStackTrace();
+				}
+			}
 				
-		//Put valid words into a list
-		startTime = System.currentTimeMillis();
-		validWordsFound = searchDictionary("", rackLetters, numOfWildcards);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
 		
-		if (validWordsFound != null){
+		//Loops through rack file input or do only one trial with random tiles
+		do{
+			ArrayList<String> validWordsFound = new ArrayList<String>();
+			minLength = 0;
 			
-			//Prints valid words found
-			//for (int i = 0; i < validWordsFound.size(); i++){
-			//	System.out.println(validWordsFound.get(i).toString());
-			//}
-			System.out.println("Valid Words Found: " + validWordsFound.size());
+			//initialize rack of letters
+			String tiles = null;			
+			if(multipleTests == true){
+				tiles = rackFileTiles.get(fileIndex);
+				fileIndex += 1;
+				
+				if (rackFileTiles.size() == fileIndex)
+					multipleTests = false;
+			}
+			Rack rack = new Rack(tiles);
+			System.out.println("Rack: " + rack);
+					
+			//checks for wildcards
+			int numOfWildcards = 0;
+			String rackLetters = rack.toString();
+			for (char c : rackLetters.toCharArray()){
+				if (c == '_')
+					numOfWildcards++;			
+			}
+			if(numOfWildcards > 0)
+				rackLetters = rackLetters.replaceAll("_", "");
+						
+			System.out.println("Number of Wildcards: " + numOfWildcards);		
+					
+			//Put valid words into a list
+			startTime = System.currentTimeMillis();
+			validWordsFound = searchDictionary("", rackLetters, numOfWildcards);
 			
-			//associate words with point values for initial word placement
-			String bestWord = findHighestValueWord(matchedWords, numOfWildcards, rackLetters);
-			
-			//Print out highest value word
-			System.out.println("Place word: " + bestWord);
+			if (!validWordsFound.isEmpty()){				
+				//Prints valid words found
+				//for (int i = 0; i < validWordsFound.size(); i++){
+				//	System.out.println(validWordsFound.get(i).toString());
+				//}
+				System.out.println("Valid Words Found: " + validWordsFound.size());
+				
+				//associate words with point values for initial word placement
+				String bestWord = findHighestValueWord(matchedWords, numOfWildcards, rackLetters);
+				
+				//Print out highest value word
+				System.out.println("Place word: " + bestWord);
+			}
+			else
+				System.out.println("No Valid Words Found\nTurn Skipped");
 			
 			//Time elapsed during turn
 			totalTime = System.currentTimeMillis() - startTime;
-			System.out.println("This turn took: " + totalTime + " ms");
-		}
-		else
-			System.out.println("No Valid Words Found");
+			timeOfAllTrials += totalTime;
+			System.out.println("This turn took: " + totalTime + " ms\n");
+			
+			matchedWords.clear();
+		} while (multipleTests == true);
+		
+		if(fileIndex == 0)
+			fileIndex = 1;
+		System.out.println("Average time of all trials: " + timeOfAllTrials/fileIndex + " ms");
 	}
 	
 	/**
@@ -158,13 +219,48 @@ public class Driver {
 					highestPointLetterIndex = bestLetter;
 					highestPoints = tempPointHolder;
 					highestPointWord = s;
-					//System.out.println(s + " worth: " + highestPoints);
 				}
 			}
 		
-		return highestPointWord.concat(" worth " + highestPoints + " points.");
+		//find initial board placement for word
+		if (!validWords.isEmpty()){
+			String placement = placeWord(highestPointWord, highestPointLetterIndex);
+			return highestPointWord.concat(" worth " + highestPoints + " points.\nTile Placement: " + placement);
+		}
+		else
+			return null;
 	}
 	
+	/**
+	 * Return a string displaying which board square to place the tiles on
+	 * Initial words are placed horizontally
+	 * @param highestPointWord
+	 * @param highestPointLetterIndex
+	 * @return
+	 */
+	private static String placeWord(String highestPointWord, int highestPointLetterIndex) {
+		String tilePlacement = "";
+		int startTile = 0;
+		
+		if(highestPointWord.length() < 5){
+			startTile = 6;
+			for (int i = 0; i < highestPointWord.length(); i++){
+				tilePlacement = tilePlacement.concat(highestPointWord.charAt(i) + ": (" + (startTile + i) + ",7)  ");
+			}
+		}
+		else {
+			if(highestPointLetterIndex < 4)
+				startTile = 3 - highestPointLetterIndex;
+			else
+				startTile = 11 - highestPointLetterIndex;
+				
+			for (int i = 0; i < highestPointWord.length(); i++){
+				tilePlacement = tilePlacement.concat(highestPointWord.charAt(i) + ": (" + (startTile + i) + ",7)  ");
+			}
+		}
+		return tilePlacement;
+	}
+
 	/**
 	 * Builds a list of valid words from the letters on the rack
 	 * @param prefix
@@ -176,14 +272,15 @@ public class Driver {
 		int n = letters.length();
 		
 		//initial word can't be shorter than two letters
-		if (n < 2)
+		if (n < minLength)
 			return matchedWords;
-		//checks for a "bingo"
+		//checks for a "bingo" which is using all 7 rack letters
 		else if (wordList.containsKey(letters) && n == 7){
-				for (int i = 0; i < wordList.get(letters).size(); i++){
-					if (!matchedWords.contains(wordList.get(letters).get(i)))
-						matchedWords.add(wordList.get(letters).get(i));
-				}									
+			for (int i = 0; i < wordList.get(letters).size(); i++){
+				if (!matchedWords.contains(wordList.get(letters).get(i)))
+					matchedWords.add(wordList.get(letters).get(i));
+			}
+			minLength = 6; // No words less than 6 letters will be found after a word of 7 letters is found
 		}		
 		else if (wordList.containsKey(letters) && wildcards == 0){
 			for (int i = 0; i < wordList.get(letters).size(); i++){
@@ -196,6 +293,7 @@ public class Driver {
 			for (int i = 0; i < n; i++){
 				if(wildcards > 0){
 					for (char alphabet = 'A'; alphabet <= 'Z'; alphabet++){
+						//add wildcard to rack and alphabetially sort the rack
 						if (n < 7){
 							letters = letters + alphabet;
 							//sorts the rack with the wildcard added in
@@ -211,14 +309,13 @@ public class Driver {
 						n= letters.length();
 						wildcards -= 1;
 						searchDictionary(prefix, letters, wildcards);
-						letters = letters.replaceFirst(Character.toString(alphabet), "");
+						letters = letters.replaceFirst(Character.toString(alphabet), ""); //remove wildcard
 						n = letters.length();
 						wildcards += 1;
 					}					
 				}
 				else{
 					searchDictionary(prefix + letters.charAt(i), letters.substring(0, i) + letters.substring(i+1, n), wildcards);	
-				
 				}
 			}
 		}

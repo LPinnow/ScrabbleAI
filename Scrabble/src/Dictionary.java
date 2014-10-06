@@ -12,10 +12,20 @@ public class Dictionary {
 	public HashMap<String, ArrayList<String>> words = new LinkedHashMap<String, ArrayList<String>>();
 	private int numOfWords = 0;
 	
+	/**
+	 * Constructor
+	 * Reads a file containing a dictionary of words
+	 */
 	public Dictionary (){
 		words = readFile();
 	}
 	
+	/**
+	 * Puts dictionary words into a hash map
+	 * Keys are the words with their letters sort alphabetically
+	 * Separate chaining is used to store collisions
+	 * @return
+	 */
 	public HashMap<String, ArrayList<String>> readFile(){
 		try{
 			BufferedReader in = new BufferedReader(new FileReader("SOWPODS_complete.txt"));
@@ -41,6 +51,7 @@ public class Dictionary {
 					}
 					wordKey = sb.toString();
 					
+					// Check for collisions
 					if (words.containsKey(wordKey)){
 						words.get(wordKey).add(wordValue);
 						setNumOfWords(getNumOfWords() + 1);
